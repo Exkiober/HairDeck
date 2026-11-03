@@ -25,9 +25,8 @@ def select(explicit=None):
 def amp(device, enabled=True):
     """bf16 autocast as the release uses it on CUDA, on Apple MPS too; a no-op on the CPU."""
     kind = torch.device(device).type
-    if kind not in ('cuda', 'mps'):
-        enabled = False
-    return torch.autocast(kind if enabled else 'cpu', dtype=torch.bfloat16, enabled=enabled)
+    enabled = bool(enabled) and kind in ('cuda', 'mps')
+    return torch.autocast(kind if kind in ('cuda', 'mps') else 'cpu', dtype=torch.bfloat16, enabled=enabled)
 
 
 def sync(device):

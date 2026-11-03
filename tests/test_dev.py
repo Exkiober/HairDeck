@@ -28,6 +28,23 @@ class AmpTests(unittest.TestCase):
         with dev.amp('cpu'):
             self.assertFalse(torch.is_autocast_enabled())
 
+    def test_disabled_amp_keeps_the_target_device(self):
+        for kind in ('cuda', 'mps'):
+            with self.subTest(kind=kind), patch.object(dev.torch, 'autocast') as autocast:
+                dev.amp(kind, enabled=False)
+                autocast.assert_called_once_with(kind, dtype=torch.bfloat16, enabled=False)
+
+    @unittest.skipUnless(HAS_CUDA or HAS_MPS, 'no CUDA or Apple MPS device')
+    def test_nested_amp_disables_on_the_target_device_and_restores_it(self):
+        device = torch.device('cuda' if HAS_CUDA else 'mps')
+        with dev.amp(device):
+            self.assertTrue(torch.is_autocast_enabled(device.type))
+            with dev.amp(device, enabled=False):
+                self.assertFalse(torch.is_autocast_enabled(device.type))
+                layer = torch.nn.Linear(4, 2).to(device)
+                self.assertEqual(layer(torch.randn(2, 4, device=device)).dtype, torch.float32)
+            self.assertTrue(torch.is_autocast_enabled(device.type))
+
     @unittest.skipUnless(HAS_MPS, 'no Apple MPS device')
     def test_seeded_noise_is_repeatable_on_mps(self):
         a = dev.randn((4, 8), 'mps', dev.generator('mps', 3))
@@ -52,6 +69,7 @@ class ImgSetDiTForwardTests(unittest.TestCase):
             y = net(x, t, ctx)
         dev.sync(device)
         self.assertEqual(y.shape, (2, 8, 40))
+        self.assertEqual(y.dtype, torch.float32, 'output head ran under bf16 autocast')
         self.assertTrue(torch.isfinite(y).all(), 'non-finite output')
 
 

@@ -5,7 +5,7 @@ which every model call uses for device selection, bf16 autocast, synchronisation
 
 ```bash
 git clone https://github.com/hyz317/HairDeck.git && cd HairDeck
-python3 -m venv .venv && .venv/bin/pip install -r requirements.txt
+python3 -m venv .venv && .venv/bin/pip install -r requirements.txt -r requirements-demo.txt
 .venv/bin/pip install --no-deps pyrender==0.1.45    # previews only; its old PyOpenGL pin is not used
 ```
 

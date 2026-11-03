@@ -107,7 +107,8 @@ def main():
         if not os.path.isfile(p):
             missing.append(f'{rel} (absent; run download_weights.py --only sam3_src)')
             continue
-        s = open(p, encoding='utf-8').read()
+        with open(p, encoding='utf-8') as f:
+            s = f.read()
         if new in s:
             print(f'present {rel}')
         elif old in s:
@@ -115,14 +116,13 @@ def main():
                 print(f'MISSING {rel}')
                 missing.append(rel)
             else:
-                open(p, 'w', encoding='utf-8').write(s.replace(old, new, 1))
+                with open(p, 'w', encoding='utf-8') as f:
+                    f.write(s.replace(old, new, 1))
                 print(f'patched {rel}')
         else:
             print(f'UNEXPECTED {rel}: neither the original nor the patched text; re-download sam3_src')
             missing.append(rel)
-    if a.check:
-        return 1 if missing else 0
-    return 0
+    return 1 if missing else 0
 
 
 if __name__ == '__main__':

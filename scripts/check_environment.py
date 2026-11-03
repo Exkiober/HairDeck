@@ -45,7 +45,8 @@ def device_check():
         raise RuntimeError(f'bfloat16 matmul on {device} returned non-finite values.')
     if device.type == 'cuda':
         props = torch.cuda.get_device_properties(torch.cuda.current_device())
-        name, mem = f'{props.name}, {props.total_memory / 2**30:.1f} GiB'
+        name = props.name
+        mem = f'{props.total_memory / 2**30:.1f} GiB'
     else:
         name, mem = ('Apple MPS', 'unified memory') if device.type == 'mps' else ('CPU', 'system memory')
     return f'torch {torch.__version__}, torchvision {torchvision.__version__}; {device.type}: {name}, {mem}.'
